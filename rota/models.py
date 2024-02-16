@@ -20,18 +20,26 @@ class RotaUser(models.Model):
     user = models.OneToOneField(User, related_name="user", on_delete=models.CASCADE)
     user_status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='OOO')
     user_region = models.CharField(max_length=120, choices=REGION_CHOICES, default='APAC')
+    new_case_counter = models.IntegerField(default=0, null=True, blank=True) # MY TOTAL CASE WILL BE NEW CASE + CLOSED CASE
+    fts_case_counter = models.IntegerField(default=0, null=True, blank=True) # FTS CASES WILL BE COUNTED IN NEW CASES/OPEN CASE BUT WILL RESET ON THE NEXT DAY
+    close_case_counter = models.IntegerField(default=0, null=True, blank=True)
+    cancelled_case_counter = models.IntegerField(default=0, null=True, blank=True) # MY CANCELLED AND TRANSFERRED CASE WILL BE SUBTRACTED TO MY NEW CASE 
+    transferred_case_counter = models.IntegerField(default=0, null=True, blank=True)
+
 
 
 class Cases(models.Model):
     STATUS_CHOICES = (
-		('FTS', 'Follow the Sun'),
-		('NewCase', 'New Case'),
-        ('Closed', 'Closed Case'),
-        ('Cancelled', 'Cancelled'),
-        ('Transferred', 'Transferred')
+		('fts', 'Follow the Sun'),
+		('newcase', 'New Case/Open Case'),
+        ('closed', 'Closed Case'),
+        ('cancelled', 'Cancelled'),
+        ('transferred', 'Transferred')
 	)
     assignee = models.ForeignKey(RotaUser, related_name="of_user", on_delete=models.CASCADE)
     case_number = models.IntegerField(default=0, null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     case_status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='NewCase')
+
+
 
