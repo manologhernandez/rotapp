@@ -20,7 +20,12 @@ class RotaUser(models.Model):
     user = models.OneToOneField(User, related_name="user", on_delete=models.CASCADE)
     user_status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='OOO')
     user_region = models.CharField(max_length=120, choices=REGION_CHOICES, default='APAC')
-
+    new_case_counter = models.IntegerField(default=0, null=True, blank=True)
+    fts_case_counter = models.IntegerField(default=0, null=True, blank=True)
+    closed_case_counter = models.IntegerField(default=0, null=True, blank=True)
+    cancelled_case_counter = models.IntegerField(default=0, null=True, blank=True)
+    transferred_case_counter = models.IntegerField(default=0, null=True, blank=True)   
+    daily_case_counter = models.IntegerField(default=0, null=True, blank=True)     
 
 class Cases(models.Model):
     STATUS_CHOICES = (
