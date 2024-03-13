@@ -5,6 +5,7 @@ from .serializer import *
 from django.contrib.auth.models import User 
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
+import collections
 
 
 class RotaUserViewSet(ModelViewSet):
@@ -37,7 +38,9 @@ class UserViewSet(ModelViewSet):
                 user=get_user
             )
             create_rota_user.save()
-            return Response({'message':'User Created'})
+
+
+            return Response({'message':'create'})
        
         except Exception as e:
             return Response({'error_message': f'Value Error Occurred on key: {e}'})  
@@ -122,6 +125,30 @@ class CaseViewSet(ModelViewSet):
        
         except Exception as e:
             return Response({'error_message': f'Value Error Occurred on key: {e}'})  
+
+    @action(detail=False, methods=['GET'])
+    def next_new_case(self, request, pk=None):
+        check_available_users = RotaUser.objects.values('id').filter(user_status='AVL')
+        if not check_available_users:
+            return Response({"message":"No Available Users"})
+        
+        rota_users = RotaUser.objects.values('id').filter(user_status='AVL',is_next_case=False).order_by("daily_case_counter")
+        if not rota_users:
+            RotaUser.objects.filter(user_status='AVL', is_next_case=True).update(is_next_case=False)
+            rota_users = RotaUser.objects.values('id').filter(user_status='AVL',is_next_case=False).order_by("daily_case_counter")
+
+        queue_list = [user for user in rota_users]
+        print(queue_list)
+        user_object = User.objects.get(pk=queue_list[0]['id'])
+        get_rota_user = RotaUser.objects.get(pk=queue_list[0]['id'])
+        get_rota_user.is_next_case = True
+        get_rota_user.save()
+
+
+        return Response({'message':'test',
+                         'next_case': user_object.first_name
+                         
+                         })
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
