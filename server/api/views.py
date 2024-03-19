@@ -64,10 +64,11 @@ class CaseViewSet(ModelViewSet):
 
         if(Cases.objects.filter(case_number=req['case_number']).values().exists()):
             get_case = Cases.objects.get(case_number=req['case_number'])
-            if assignee != assignee:
+            if assignee != req['assignee']:
                 get_case.assignee = assignee
                 get_case.case_status = 'FTS'
                 print("FTS DAPAT LOGIC")
+                #add new field na mag aassign ng temporary case owner
             else:
                 return Response ({'message':'You cannot FTS your own case'})
 
@@ -79,10 +80,12 @@ class CaseViewSet(ModelViewSet):
             create_case = Cases(assignee=assignee, case_number=req['case_number'])
             assignee.new_case_counter += 1
             assignee.daily_case_counter += 1
+            #add total counter
             assignee.save()
             create_case.save()
+            return Response({'message': f'Case updated for {assignee_name.first_name,}',
+                             'next_case': ''})
         
-        return Response({'message': f'Case updated for {assignee_name.first_name}'})
 
     @action(detail=False, methods=['PATCH'])
     def edit_case_status(self, request, pk=None):
@@ -132,22 +135,23 @@ class CaseViewSet(ModelViewSet):
         if not check_available_users:
             return Response({"message":"No Available Users"})
         
-        rota_users = RotaUser.objects.values('id').filter(user_status='AVL',is_next_case=False).order_by("daily_case_counter")
+        rota_users = RotaUser.objects.values('id').filter(user_status='AVL',is_next_case=True).order_by("daily_case_counter")
         if not rota_users:
-            RotaUser.objects.filter(user_status='AVL', is_next_case=True).update(is_next_case=False)
-            rota_users = RotaUser.objects.values('id').filter(user_status='AVL',is_next_case=False).order_by("daily_case_counter")
-
+            RotaUser.objects.filter(user_status='AVL', is_next_case=False).update(is_next_case=True)
+            rota_users = RotaUser.objects.values('id').filter(user_status='AVL',is_next_case=True).order_by("daily_case_counter")
+        
         queue_list = [user for user in rota_users]
-        print(queue_list)
         user_object = User.objects.get(pk=queue_list[0]['id'])
+
+        print(queue_list)
         get_rota_user = RotaUser.objects.get(pk=queue_list[0]['id'])
-        get_rota_user.is_next_case = True
+        get_rota_user.is_next_case = False
         get_rota_user.save()
 
 
         return Response({'message':'test',
                          'next_case': user_object.first_name
-                         
+                        
                          })
 
     def destroy(self, request, *args, **kwargs):
