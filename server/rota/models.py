@@ -26,7 +26,8 @@ class RotaUser(models.Model):
     cancelled_case_counter = models.IntegerField(default=0, null=True, blank=True)
     transferred_case_counter = models.IntegerField(default=0, null=True, blank=True)   
     daily_case_counter = models.IntegerField(default=0, null=True, blank=True)
-    is_next_case = models.BooleanField(default=False)  
+    is_next_case = models.BooleanField(default=True)
+    
 
 class Cases(models.Model):
     STATUS_CHOICES = (
@@ -40,4 +41,4 @@ class Cases(models.Model):
     case_number = models.IntegerField(default=0, null=True, blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     case_status = models.CharField(max_length=25, choices=STATUS_CHOICES, default='NewCase')
-
+    temporary_assignee = models.CharField(max_length=25, default='')
