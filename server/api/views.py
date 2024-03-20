@@ -61,26 +61,47 @@ class CaseViewSet(ModelViewSet):
         req = request.data
         assignee_name = User.objects.get(pk=req['assignee'])
         assignee = RotaUser.objects.get(user=req['assignee'])
-
-        if(Cases.objects.filter(case_number=req['case_number']).values().exists()):
+        if Cases.objects.filter(case_number=req['case_number']).exists():
             get_case = Cases.objects.get(case_number=req['case_number'])
-            if assignee != req['assignee']:
-                get_case.assignee = assignee
-                get_case.case_status = 'FTS'
-                print("FTS DAPAT LOGIC")
-                #add new field na mag aassign ng temporary case owner
-            else:
+   
+            #if assignee != get_case.assignee:
+            #    temporary_assignee_username = assignee.user.username
+            #    get_case.temporary_assignee = temporary_assignee_username 
+            #    get_case.case_status = 'FTS'
+            #    print("FTS DAPAT LOGIC")
+                
+            #    assignee.fts_case_counter += 1
+            #    assignee.save()
+            #    get_case.save()
+            #    return Response({'message': 'FTS'})
+            #else:
+            #    return Response ({'message':'You cannot FTS your own case'})
+            
+            if assignee == get_case.assignee:
                 return Response ({'message':'You cannot FTS your own case'})
+            else:
+                # Check if the current assignee is the temporary assignee
+                if get_case.temporary_assignee == assignee.user.username:
+                    # revert the case to the original assignee
+                    #get_case.temporary_assignee = ''
+                    get_case.save()
+                    return Response({'message': 'Case reverted to original assignee'})
+                else:
+                    # temporary assignee
+                    temporary_assignee_username = assignee.user.username
+                    get_case.temporary_assignee = temporary_assignee_username
+                    get_case.case_status = 'FTS'
+                    print("FTS DAPAT LOGIC")
 
-            assignee.fts_case_counter +=1
-            assignee.save()
-            get_case.save()
-
+                    assignee.fts_case_counter += 1
+                    assignee.save()
+                    get_case.save()
+                    return Response({'message': 'FTS'})
         else:
             create_case = Cases(assignee=assignee, case_number=req['case_number'])
             assignee.new_case_counter += 1
             assignee.daily_case_counter += 1
-            #add total counter
+            assignee.total_case_counter += 1
             assignee.save()
             create_case.save()
             return Response({'message': f'Case updated for {assignee_name.first_name,}',
